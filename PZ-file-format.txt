@@ -1,0 +1,94 @@
+This document contains a description of the PZ file format. The PZ
+file format is a custom image format designed for CMSC 15200 in winter
+2022. The pixel data in a PZ is run-length encoded, which is a
+favorable way to represent images that contain large blocks of uniform
+color.
+
+In the notation below, "bytes m:n" means the bytes of the file from m
+to n inclusive. For example, "bytes 19:21" means "bytes 19, 20, and
+21."
+
+When bytes are marked "reserved for future expansion" in the text
+below, it means that, for the time being, it doesn't matter what they
+contain. Having said that, you might write an easy-to-recognize
+character like '.' into the unused bytes to help with debugging.
+
+A note on endianness: A big-endian integer is one where the largest
+byte appears first, with bytes representing smaller magnitudes
+following. Its oppositie is little endianness, where the small byte
+comes first. Note that big-endianness is about the order of bytes,
+and, regardless of endianness,the order of the bits within each byte
+is still descending left-to-right with the smallest bit rightmost.
+
+=== The PZ File Format ===
+
++ bytes 0:1
+
+These two bytes contain the characters PZ. This is the "magic number"
+for PZ files.
+
++ bytes 2:3
+
+These two bytes are reserved for future expansion. For the time being,
+they can contain anything. The same is true of any other bits and
+bytes identified below as reserved for future expansion.
+
++ bytes 4:5
+
+The current time is given as an HHMM decimal integer. For example: 0
+is midnight, 930 is 9:30am, 1345 is 1:45pm. The time should be the
+minute at which the PZ conversion is performed. This is written into
+the file as a two-byte big-endian integer. To understand how to read
+the current time from the system, type "man localtime".
+
++ bytes 6:9
+
+These bytes contain the current date as a YYYYMMDD decimal integer
+(for example, 20220228 for Feb 28 of this year). This should be the
+date at which the conversion to PZ is performed. "man localtime" is
+helpful here as well. This number is written into the file as a 4-byte
+big-endian integer.
+
++ bytes 10:11
+
+The image width is written as a 2-byte big-endian integer.
+
++ bytes 12:13
+
+The image height is given as a 2-byte big-endian integer.
+
++ bytes 14:17
+
+Reserved for future expansion.
+
++ byte 18
+
+The rightmost bit -- the lowest bit -- of byte 18 is 1 for run-length
+encoded color data, 0 for raw data. For project 1, this bit is always
+set to 1.
+
+The next-to-rightmost bit of byte 18 is 1 for a grayscale image, 0 for
+color.
+
+The high 6 bits in byte 22 are reserved for future expansion.
+
++ bytes 19:21
+
+Reserved for future expansion.
+
++ byte 22:??
+
+A C string describing the image, terminated with a '\0'. Because the
+file includes a terminating character, the string is of arbitrary
+length.
+
++ bytes following the string:
+
+First, a 4-byte big-endian integer giving the number of runs.
+
+Then, the run lengths in order, where each run length is a 4-byte
+big-endian integer.
+
+Following the run lengths, the colors in order and in lockstep with
+the runs. If the image is a grayscale image, these colors are one byte
+each; otherwise, they are three bytes each in rgb order.
